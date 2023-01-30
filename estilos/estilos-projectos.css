@@ -1,0 +1,18 @@
+body {    
+    background: linear-gradient(to right, #29323c, #485563); 
+
+    /* linear-gradient(to right, rgb(72, 85, 99), rgb(41, 50, 60)) */
+    /* linear-gradient(to left, #e6dada, #274046) */
+}
+
+html::-webkit-scrollbar {
+    width: 8px;     
+    height: 8px;    
+    background-color: #424e5c;
+}
+
+
+html::-webkit-scrollbar-thumb {
+    background: #006cd9;
+    border-radius: 4px;
+}
