@@ -93,7 +93,7 @@ export default function ProjectCard({ maxProjects = 6 }) {
                 <h1 className="text-2xl">{project.titulo} -    
                 <span className="block md:contents">                     
                     {project.svg.map(img =>(
-                        <img className="inline w-6 mr-2" src={img}></img>   
+                        <img className="inline w-6 mr-2" src={img.src}></img>   
                     ))}                       
                 </span> 
                 </h1>

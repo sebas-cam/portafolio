@@ -39,11 +39,11 @@ export default function Header() {
                     Projects 
                   </a>
                 </li>
-                <li className="block cursor-pointer mb-2.5 hover:bg-gray-800 hover:text-gray-300">       
+                {/* <li className="block cursor-pointer mb-2.5 hover:bg-gray-800 hover:text-gray-300">       
                   <a className="text-[#fff] block p-2" href="/projects">              
                     Side Hustle
                   </a>
-                </li>                
+                </li>   */}              
                 <li className="block cursor-pointer mb-2.5 hover:bg-gray-800 hover:text-gray-300">
                   <a className="text-[#fff] block p-2" href="/skills">            
                     Skills
