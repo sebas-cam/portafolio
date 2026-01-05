@@ -25,4 +25,4 @@
 
 ## **LINK**
 
-- <a href="https://sebastian-campos.com/" target="_blank">sebastian-campos.com</a>
+- <a href="https://www.sebascodes.dev/" target="_blank">sebascodes.dev</a>
