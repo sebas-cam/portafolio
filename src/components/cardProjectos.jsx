@@ -17,7 +17,7 @@ export default function ProjectCard({ maxProjects = 6 }) {
     
     const projectsArray = [
         {
-            'id':'1',
+            'id': 1,
             'imagen':'https://res.cloudinary.com/dhanciveg/image/upload/v1687876812/Joke%20maker/jodeMaker_lovpxi.png',
             'titulo':'Joke Generator',
             'descripcion':'The joke generator web app is a fun tool that allows you to get jokes from different categories in the language of your choice. With just a few clicks, you can brighten your day with jokes in English or Spanish. You can choose from various categories such as programming, miscellaneous, dark, puns, spooky, and Christmas. Additionally, you have the option to select the language in which you want to receive the jokes.',
@@ -28,7 +28,7 @@ export default function ProjectCard({ maxProjects = 6 }) {
             'svg': [imgHtml, imgCss, imgTailwind, imgJavascript, imgReact, imgViteJs]            
         },
         {
-            'id':'2',
+            'id': 2,
             'imagen':'https://res.cloudinary.com/dhanciveg/image/upload/v1687463430/tiktaktoe/tiktaktou_wbvwrn.png',
             'titulo':'Tic Tac Toe',
             'descripcion':'The Tic Tac Toe app is a classic game implementation where users can enjoy playing against either another player or the computer. The app features a visually appealing and user-friendly interface that displays the game board and allows players to make their moves. It keeps track of the players moves and determines the outcome of the game, whether its a victory, a draw, or any other result.',
@@ -39,7 +39,7 @@ export default function ProjectCard({ maxProjects = 6 }) {
             'svg': [imgHtml, imgCss, imgJavascript, imgReact, imgViteJs]
         },
         {
-            'id':'3',
+            'id': 3,
             'imagen':'https://res.cloudinary.com/dhanciveg/image/upload/v1687219500/Gesto%20de%20notas/addNote_nebj9z.png',
             'titulo':'Gestor de notas',
             'descripcion':'My project is a note-taking application that allows users to create, read, edit, and delete notes. It provides a user-friendly interface to manage personal or professional notes efficiently. The application allows users to create new notes by entering a title and the content of the note.',
@@ -50,7 +50,7 @@ export default function ProjectCard({ maxProjects = 6 }) {
             'svg': [ imgHtml, imgCss, imgTailwind, imgJavascript, imgReact, imgRedux, imgJwt, imgPython, imgMysql]
         },        
         {
-            'id':'4',
+            'id': 4,
             'imagen':'https://res.cloudinary.com/dhanciveg/image/upload/v1687218987/rickandmorty_zzplyv.png',
             'titulo':'Rick y Morty App',
             'descripcion':'My project uses the Rick and Morty API to provide fans of the series with an interactive and fun experience. The application displays detailed information about the characters, episodes, and locations from the animated series. Users can explore the extensive list of characters and retrieve data such as their name, species, status, gender, and origin.',
@@ -61,7 +61,7 @@ export default function ProjectCard({ maxProjects = 6 }) {
             'svg': [imgHtml, imgCss, imgTailwind, imgJavascript, imgReact, imgViteJs]
         },
         {
-            'id':'5',
+            'id': 5,
             'imagen':'https://astro-modern-personal-website.netlify.app/_astro/post_img_Z1NWKef.webp',
             'titulo':'Palabras clase para el ceo por inteligencia artificial',
             'descripcion':'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nihil neque molestias tenetur veritatis officiis in eius consequatur aliquam ipsam dicta iste ipsum illo possimus sapiente quidem laboriosam, dolorem est iusto.',
@@ -72,7 +72,7 @@ export default function ProjectCard({ maxProjects = 6 }) {
             'svg': [imgCss, imgExpress, imgHtml, imgJavascript, imgJwt, imgMongodb, imgReact, imgRedux, imgTailwind, imgMysql, imgNodejs, imgPython]
         },
         {
-            'id':'6',
+            'id': 6,
             'imagen':'https://astro-modern-personal-website.netlify.app/_astro/post_img_Z1NWKef.webp',
             'titulo':'Plataforma de reservas',
             'descripcion':'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nihil neque molestias tenetur veritatis officiis in eius consequatur aliquam ipsam dicta iste ipsum illo possimus sapiente quidem laboriosam, dolorem est iusto.',
