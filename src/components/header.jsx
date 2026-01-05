@@ -1,4 +1,5 @@
 
+import React from "react";
 import linkImg from "../image/logo.png"
 import "../styles/header.css"
 import { useState } from "react";
@@ -24,7 +25,7 @@ export default function Header() {
           className="px-4 md:px-6 py-3 lg max-w-[700px] mx-auto flex flex-col py-4 justify-between gap-3 h-screen md:flex hidden"
         >    
             <div className="pb-4">
-              <img className="w-4/5 m-auto imgPerfil" src={linkImg} alt="" />
+              <img className="w-4/5 m-auto imgPerfil" src={linkImg.src} alt="" />
             </div>      
             <div className="flex flex-col flex-1 p-2 space-y-4">
               <ul className="text-gray-700">
@@ -35,9 +36,14 @@ export default function Header() {
                 </li>
                 <li className="block cursor-pointer mb-2.5 hover:bg-gray-800 hover:text-gray-300">       
                   <a className="text-[#fff] block p-2" href="/projects">              
-                    Projects
+                    Projects 
                   </a>
                 </li>
+                <li className="block cursor-pointer mb-2.5 hover:bg-gray-800 hover:text-gray-300">       
+                  <a className="text-[#fff] block p-2" href="/projects">              
+                    Side Hustle
+                  </a>
+                </li>                
                 <li className="block cursor-pointer mb-2.5 hover:bg-gray-800 hover:text-gray-300">
                   <a className="text-[#fff] block p-2" href="/skills">            
                     Skills

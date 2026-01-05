@@ -1,3 +1,4 @@
+import React from "react"
 import imgCss from "../image/css.png"
 import imgExpress from "../image/express.png"
 import imgHtml from "../image/html.png"
@@ -12,7 +13,7 @@ import imgNodejs from "../image/nodejs.png"
 import imgPython from "../image/python.png"
 import imgViteJs from "../image/vitejs.png"
 
-export default function ProjectCard({ maxProjects }) {    
+export default function ProjectCard({ maxProjects = 6 }) {    
     
     const projectsArray = [
         {
