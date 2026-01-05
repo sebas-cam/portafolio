@@ -1,53 +1,91 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import DropDownOption from '../components/buttomOptions.jsx';
+import Layout from "../layouts/Layout.astro";
+import DropDownOption from "../components/buttomOptions.jsx";
 ---
 
 <Layout title="CV | Sebastian Campos">
-    <main>    
-        <DropDownOption client:load/>
-        <div class="md:my-14 md:pr-14">            
-            <section class="pb-5">
-                <p class="text-3xl text-[#006cd9] font-normal pt-3 pb-2">/Profile</p>
-                <p class="text-white md:text-lg text-base text-justify pl-4">
-                    I am a junior web developer with over 1 year of experience. I consider myself proactive and passionate about challenges in the field of technology. I always strive to stay up to date and keep myself informed about the latest trends and advancements. Moreover, I have a strong drive for self-learning, which motivates me to explore new technologies and tools to continuously enhance my performance and skills in web development.
-                </p>
-            </section>
+  <main>
+    <DropDownOption client:load />
+    <div class="md:my-14 md:pr-14">
+      <section class="pb-5 space-y-6">
+        <p class="text-3xl text-[#006cd9] font-normal pt-3">/Profile</p>
+        <p class="text-white md:text-lg text-base text-justify pl-4">
+          Full-Stack Developer with 5+ years of experience specializing in
+          building scalable web applications. Currently serving as Lead
+          Front-End at Scient One, developing AI-powered dashboards and SaaS
+          platforms. Proven track record delivering 10+ projects for clients
+          across LATAM and the US, from e-commerce solutions to real estate
+          platforms. Proficient in React, Next.js, Node.js, and modern web
+          technologies. Passionate about continuous learning, performance
+          optimization, and sharing SaaS insights with the developer community.
+        </p>
+      </section>
 
-            <section class="pb-5">
-                <p class="text-3xl text-[#006cd9] font-normal pt-3 pb-2">/Education</p>
-                <p class="text-xl text-white pl-4">software engineer</p>
-                <p class="pl-4 text-white pb-3">2019 to 2022 at Isil, Lima, Peru</p>
+      <section class="pb-5 space-y-6">
+        <p class="text-3xl text-[#006cd9] font-normal pt-3">/Education</p>
+        <div>
+            <p class="text-xl text-white pl-4">software engineer</p>
+        <p class="pl-4 text-white">2019 to 2022 at Isil, Lima, Peru</p>
+        </div>
+        
+        <div>
+            <p class="text-xl text-white pl-4">English C1</p>
+        <p class="pl-4 text-white">2018 to 2021 at Icpna, Lima, Peru</p>
+        </div>
+        
+        <div>
+            <p class="text-xl text-white pl-4">Self-taught Development</p>
+        <p class="pl-4 text-white">
+          2019 to now at Udemy/Platzi/Youtube (React, Next.js, Node.js,
+          TypeScript, DevOps)
+        </p>
+        </div>
+        
+      </section>
 
-                <p class="text-xl text-white pl-4">English C1</p>
-                <p class="pl-4 text-white pb-3">2018 to 2021 at Icpna, Lima, Peru</p>
+      <section class="pb-5 space-y-6">
+        <p class="text-3xl text-[#006cd9] font-normal pt-3">/Experience</p>
+        <div>
+          <p class="text-xl text-white pl-4">/Scient One - Lead Front-End Developer</p>
+          <p class="pl-4 text-white pb-2">July 2024 to Present | Miami, USA (Remote)</p>
+          <p class="pl-4 text-white">
+            Leading front-end development for AI-powered SaaS platform. Built interactive dashboards using Next.js and Tailwind for bot creation and training. Implemented unified component architecture and CI/CD practices, reducing deployment times by 30%. Optimized web performance through advanced strategies, improving load times significantly.
+          </p>
+        </div>
+        <div>
+          <p class="text-xl text-white pl-4">/Samishop - Front-End Developer</p>
+          <p class="pl-4 text-white pb-2">April 2022 to November 2023 | Lima, Peru</p>
+          <p class="pl-4 text-white">
+            Developed multiple e-commerce platforms, improving user experience and customer retention. Created responsive layouts with HTML, CSS, Bootstrap, JavaScript, and jQuery. Optimized page performance, reducing load times by 20% and increasing conversion rates.
+          </p>
+        </div>
+        <div>
+          <p class="text-xl text-white pl-4">/Comunicados Digitales - Full-Stack Developer</p>
+          <p class="pl-4 text-white pb-2">September 2021 to April 2022 | Buenos Aires, Argentina (Remote)</p>
+          <p class="pl-4 text-white">
+            Designed and developed complete platform from scratch using Next.js, Node.js, Express, and MySQL. Built both front-end and back-end for robust, scalable application with enhanced responsiveness and quick feature access.
+          </p>
+        </div>
+        <div>
+          <p class="text-xl text-white pl-4">/Vicios Burger - Front-End Developer</p>
+          <p class="pl-4 text-white pb-2">November 2020 to August 2021 | Lima, Peru</p>
+          <p class="pl-4 text-white">
+            Developed web application for online ordering and in-table delivery management. Built using React.js and Tailwind, improving the restaurant's online visibility and customer experience.
+          </p>
+        </div>
+      </section>
 
-                <p class="text-xl text-white pl-4">Javascript</p>
-                <p class="pl-4 text-white pb-3">2019 to 2020 at Udemy</p>
-
-                <p class="text-xl text-white pl-4">Python</p>
-                <p class="pl-4 text-white pb-3">2020 to 2021 at Udemy</p>                
-
-            </section>    
-            
-            <section class="pb-5">               
-                <p class="text-3xl text-[#006cd9] font-normal pt-3 pb-2">/Experience</p>
-
-                <p class="text-xl text-white pl-4">/Samishop</p>
-                <p class="pl-4 text-white pb-2">From 2022 to now at Lima, Peru</p>
-                <p class="pl-4 text-white pb-4">At Samishop, I work as a front-end developer responsible for layout design, functionality enhancement, data capture, and data submission. I have worked on various projects, with the majority being e-commerce websites, using HTML, CSS, Bootstrap, JavaScript, and jQuery.</p>                  
-
-                <p class="text-xl text-white pl-4">/Landing page for Vicios Burger</p>
-                <p class="pl-4 text-white pb-2">From 2021 to 2021 at Lima, Peru</p>
-                <p class="pl-4 text-white pb-4">As a freelancer, my first project involved creating a landing page for a local fast food restaurant in my area. The landing page showcased their products, listed their locations, and included a contact form. I utilized HTML, CSS, Bootstrap, and JavaScript to handle all aspects of the page's creation. Although the page is currently offline, it was taken down in preparation for the development of an e-commerce platform.</p>                                 
-            </section>
-
-            <div class="text-center pt-5 md:pb-0 pb-4">
-                <button class="mx-3 cursor-pointer border-solid border border-[#006cd9] rounded-2xl md:text-lg text-base text-[#006cd9] font-bold ease-in duration-300 hover:scale-125 hover:shadow-lg ">
-                    <a class="py-3 px-5 block" href="../resume/cv_actualizado_ingles.pdf" download="Sebastian_Campos_CV">Download CV</a> 
-                </button>                
-            </div>
-            
-        </div>	
-    </main>
+      <div class="text-center pt-5 md:pb-0 pb-4">
+        <button
+          class="mx-3 cursor-pointer border-solid border border-[#006cd9] rounded-2xl md:text-lg text-base text-[#006cd9] font-bold ease-in duration-300 hover:scale-125 hover:shadow-lg"
+        >
+          <a
+            class="py-3 px-5 block"
+            href="../resume/cv_actualizado_ingles.pdf"
+            download="Sebastian_Campos_CV">Download CV</a
+          >
+        </button>
+      </div>
+    </div>
+  </main>
 </Layout>
