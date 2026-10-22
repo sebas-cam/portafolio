@@ -1,8 +1,0 @@
----
-import { projects, type Lang } from "../data/portfolio";
-const { lang } = Astro.props as { lang: Lang };
-const prefix = lang === "es" ? "/es" : "";
-const copy = lang === "es" ? { title:"Proyectos", intro:"Productos SaaS y trabajo para clientes: IA, WhatsApp, automatización y plataformas web.", visit:"Visitar sitio" } : { title:"Projects", intro:"SaaS products and client work: AI, WhatsApp, automation and web platforms.", visit:"Visit site" };
----
-<section class="page-hero"><p class="eyebrow">/ 02</p><h1>{copy.title}</h1><p>{copy.intro}</p></section>
-<section class="section"><div class="cards">{projects.map((project) => <article class="project"><div><div class="project-top"><span class="meta">{project.year}</span><span class="tag">{project.status[lang]}</span></div><h3>{project.name}</h3><p>{project.tagline[lang]}</p></div><div><div class="chips">{project.stack.map((tech) => <span class="chip">{tech}</span>)}</div><div class="actions"><a class="button" href={`${prefix}/projects/${project.slug}`}>{lang === "es" ? "Caso de estudio →" : "Case study →"}</a>{project.url && <a class="button" href={project.url} target="_blank" rel="noreferrer">{copy.visit} ↗</a>}</div></div></article>)}</div></section>

@@ -1,9 +1,0 @@
----
-import { profile, type Lang } from "../data/portfolio";
-const { lang } = Astro.props as { lang: Lang };
----
-<footer class="site-footer">
-  <p>© {new Date().getFullYear()} {profile.name}</p>
-  <div><a href={profile.social.github} target="_blank" rel="noreferrer">GitHub ↗</a><a href={profile.social.linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a><a href={profile.social.x} target="_blank" rel="noreferrer">X ↗</a></div>
-  <p>{profile.location[lang]}</p>
-</footer>

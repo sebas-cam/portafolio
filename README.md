@@ -1,28 +1,29 @@
-# portafolio_2023
+# Welcome to your Lovable project
 
-## **📌 OBJECTIVES**
+This project was built with [Lovable](https://lovable.dev).
 
-- create a new web portfolio with a better UI
+## Build with Lovable
 
-## **📌 PROJECT DESCRIPTION**
- 
-- In this web you can:
+Open your project in the [Lovable editor](https://lovable.dev) and keep building.
 
-✅ Reed more information about me.
-<br />
-✅ See my skills.
-<br />
-✅ See my projects.
-<br />
-✅ Find my CV.
-<br />
-✅ Contact me.
-<br />
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
+- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
 
-## **🦾 TECHNOLOGIES**
+## Development
 
--  **HTML**, **CSS**, **Tailwind**, **JavaScript**, **React**, **Astro**
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
-## **LINK**
+```sh
+git clone <this-repository-url>
+cd <repository-name>
+npm i
+npm run dev
+```
 
-- <a href="https://www.sebascodes.dev/" target="_blank">sebascodes.dev</a>
+## Built with
+
+- TanStack Start
+- TypeScript
+- React
+- Tailwind CSS
