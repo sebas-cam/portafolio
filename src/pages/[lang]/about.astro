@@ -1,0 +1,5 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro"; import AboutPage from "../../components/AboutPage.astro"; import { languages, type Lang } from "../../data/portfolio";
+export function getStaticPaths() { return languages.map((lang) => ({ params: { lang } })); } const { lang } = Astro.params as { lang: Lang };
+---
+<SiteLayout {lang} current="/about" title={lang === "es" ? "Sobre mí" : "About"}><AboutPage {lang} /></SiteLayout>

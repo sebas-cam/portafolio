@@ -1,0 +1,5 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro"; import ProjectDetail from "../../components/ProjectDetail.astro"; import { projects } from "../../data/portfolio";
+export function getStaticPaths() { return projects.map((project) => ({ params: { slug: project.slug } })); } const { slug } = Astro.params;
+---
+<SiteLayout lang="en" current="/projects" title="Project"><ProjectDetail lang="en" slug={slug!} /></SiteLayout>
