@@ -8,7 +8,7 @@ describe("Supplied product rules", () => {
   });
   it("Kompry is the AI sales agent with a live site link", () => {
     const kompry = selectedProjects.find(p => p.name === "Kompry");
-    expect(kompry?.url).toBe("https://kompry.app");
+    expect(kompry?.url).toBe("https://kompry.com");
     expect(kompry?.stack).toContain("Convex");
   });
   it("The hero counts ~20 bookings a day handled by the bot", () => {
