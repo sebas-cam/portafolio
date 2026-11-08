@@ -1,390 +1,458 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { build, type BuildZone, type Lang } from "@/content/site";
+import { Eye, EyeOff, Pause, Play, RotateCcw } from "lucide-react";
+import { build, type Lang } from "@/content/site";
+import { BuildEngine, type BuildState } from "./build-engine";
 
 /**
- * "Building live" intro.
- * The page is fully server-rendered (SEO intact). An inline script in <head> adds
- * `html.build-armed`, which covers every [data-build] zone with a skeleton layer.
- * Scripted "agents" then sweep each layer away so the page looks like it is being
- * painted in real time. There are no real agents: it is a timeline.
+ * Full-screen Claude Code-style prompt, then a HUD over the live build.
+ * The head script in __root.tsx sets <html data-build="pending"> before paint.
  */
 
-type Mode = "show" | "scroll" | "done";
-type Phase = "idle" | "intro" | "running" | "finished";
-type Agent = { n: number; zone: BuildZone | null; start: number; dur: number };
-type Line = { id: number; text: string; kind: "info" | "start" | "done" };
+type Mode = (typeof build.modes)[number]["id"];
+const SEEN = "build-seen";
+const AUTO = "build-auto";
+const SWARM = "build-swarm";
+const DOTS = ["#e8894a", "#f0b45a", "#d4553a", "#f1e7d0", "#8f8476"];
 
-// Presentation timeline in seconds. Overlapping agents run in parallel.
-const PLAN: Agent[] = [
-  { n: 1, zone: "nav", start: 0.8, dur: 3 },
-  { n: 2, zone: "hero-title", start: 2, dur: 6 },
-  { n: 3, zone: "hero-copy", start: 4.5, dur: 5.5 },
-  { n: 4, zone: "metrics", start: 7.5, dur: 4.5 },
-  { n: 5, zone: "projects", start: 11, dur: 8.5 },
-  { n: 6, zone: "how", start: 16.5, dur: 5 },
-  { n: 7, zone: "experience", start: 20.5, dur: 6 },
-  { n: 8, zone: "clients", start: 25.5, dur: 5 },
-  { n: 9, zone: "stack", start: 29.5, dur: 6 },
-  { n: 10, zone: "services", start: 34.5, dur: 5 },
-  { n: 11, zone: "education", start: 38.5, dur: 4.5 },
-  { n: 12, zone: "contact", start: 42, dur: 5 },
-  { n: 13, zone: "footer", start: 45.5, dur: 3.5 },
-  { n: 14, zone: null, start: 47, dur: 6 },
-];
-const TOTAL = 54;
-const SCROLL_DUR = 1.8;
-const SEEN_KEY = "build-seen";
-
-const pad = (n: number) => String(n).padStart(2, "0");
-const tag = (n: number) => `agent-${pad(n)}`;
-const zoneEl = (z: BuildZone | null) =>
-  z ? document.querySelector<HTMLElement>(`[data-build="${z}"]`) : null;
-const html = () => document.documentElement;
+const store = {
+  get: (s: Storage | undefined, k: string) => {
+    try {
+      return s?.getItem(k) ?? null;
+    } catch {
+      return null;
+    }
+  },
+  set: (s: Storage | undefined, k: string, v: string | null) => {
+    try {
+      if (v === null) s?.removeItem(k);
+      else s?.setItem(k, v);
+    } catch {
+      /* blocked */
+    }
+  },
+};
+const ss = () => (typeof window === "undefined" ? undefined : window.sessionStorage);
+const ls = () => (typeof window === "undefined" ? undefined : window.localStorage);
 
 export function BuildShow({ lang }: { lang: Lang }) {
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [sel, setSel] = useState(0);
-  const [lines, setLines] = useState<Line[]>([]);
-  const [active, setActive] = useState<number[]>([]);
-  const [elapsed, setElapsed] = useState(0);
-  const [hideDock, setHideDock] = useState(false);
+  const [stage, setStage] = useState<"off" | "intro" | "build">("off");
+  const [hud, setHud] = useState<BuildState | null>(null);
+  const [swarm, setSwarm] = useState(true);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const engine = useRef<BuildEngine | null>(null);
+  const pendingMode = useRef<Exclude<Mode, "done"> | null>(null);
 
-  const timers = useRef<number[]>([]);
-  const lineId = useRef(0);
-  const t0 = useRef(0);
-  const follow = useRef(true);
-  const running = useRef<Map<number, number>>(new Map()); // agent n -> started at (ms)
-  const doneSet = useRef<Set<number>>(new Set());
-  const raf = useRef(0);
-  const io = useRef<IntersectionObserver | null>(null);
-  const langRef = useRef(lang);
-  langRef.current = lang;
-
-  const log = useCallback((text: string, kind: Line["kind"] = "info") => {
-    setLines((ls) => [...ls.slice(-7), { id: ++lineId.current, text, kind }]);
-  }, []);
-  const later = (fn: () => void, ms: number) => {
-    timers.current.push(window.setTimeout(fn, ms));
-  };
-
-  // Arm on mount: only if the inline head script decided this visit should build.
   useEffect(() => {
-    if (!html().classList.contains("build-armed")) return;
-    html().classList.add("build-live");
-    for (const a of PLAN) {
-      const el = zoneEl(a.zone);
-      if (el) {
-        el.dataset["buildState"] = "queued";
-        el.dataset["buildLabel"] = `${tag(a.n)} · ${build.queued[langRef.current]}`;
-      }
-    }
-    setPhase("intro");
+    const html = document.documentElement;
+    if (!html.dataset["build"]) return;
+    html.dataset["buildLive"] = "";
+    const auto = store.get(ss(), AUTO) as Mode | null;
+    store.set(ss(), AUTO, null);
+    setSwarm(store.get(ls(), SWARM) !== "0");
+    if (auto === "show" || auto === "scroll") {
+      pendingMode.current = auto;
+      setStage("build");
+    } else setStage("intro");
     return () => {
-      teardown();
+      engine.current?.destroy();
+      engine.current = null;
+      delete html.dataset["buildLive"];
+      delete html.dataset["build"];
     };
   }, []);
 
-  // Lock page scroll while the terminal prompt is open.
+  // Start the engine once its canvas is mounted.
   useEffect(() => {
-    if (phase !== "intro") return;
-    const prev = html().style.overflow;
-    html().style.overflow = "hidden";
-    return () => {
-      html().style.overflow = prev;
-    };
-  }, [phase]);
+    if (stage !== "build" || engine.current || !canvas.current) return;
+    const e = new BuildEngine(canvas.current, lang, setHud);
+    e.setSwarm(store.get(ls(), SWARM) !== "0");
+    engine.current = e;
+    if (pendingMode.current) void e.start(pendingMode.current);
+  }, [stage, lang]);
 
-  function teardown() {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-    cancelAnimationFrame(raf.current);
-    io.current?.disconnect();
-    html().classList.remove("build-armed", "build-live");
-  }
-
-  const startAgent = (a: Agent, durS: number) => {
-    if (running.current.has(a.n) || doneSet.current.has(a.n)) return;
-    const L = langRef.current;
-    running.current.set(a.n, performance.now());
-    setActive([...running.current.keys()]);
-    const what = a.zone ? build.zones[a.zone][L] : build.qa[L];
-    log(`${tag(a.n)} → ${what}`, "start");
-    const el = zoneEl(a.zone);
-    if (el) {
-      el.style.setProperty("--build-dur", `${durS}s`);
-      el.dataset["buildLabel"] = `${tag(a.n)} ▸ ${build.painting[L]} ${what}`;
-      el.dataset["buildState"] = "building";
-    }
-    later(() => endAgent(a, durS), durS * 1000);
-  };
-
-  const endAgent = (a: Agent, durS: number) => {
-    running.current.delete(a.n);
-    doneSet.current.add(a.n);
-    setActive([...running.current.keys()]);
-    const el = zoneEl(a.zone);
-    if (el) el.dataset["buildState"] = "done";
-    const what = a.zone ? build.zones[a.zone][langRef.current] : "QA";
-    log(`✓ ${tag(a.n)} ${what} (${durS.toFixed(1)}s)`, "done");
-  };
-
-  const finish = useCallback(
-    (skipped: boolean) => {
-      timers.current.forEach(clearTimeout);
-      timers.current = [];
-      cancelAnimationFrame(raf.current);
-      io.current?.disconnect();
-      running.current.clear();
-      setActive([]);
-      document.querySelectorAll<HTMLElement>("[data-build]").forEach((el) => {
-        el.dataset["buildState"] = "done";
-      });
-      const secs = t0.current ? Math.round((performance.now() - t0.current) / 1000) : 0;
-      if (t0.current)
-        log(
-          `✻ ${build.done[langRef.current]} · ${secs}s · 14 ${build.agents[langRef.current]}`,
-          "done",
-        );
-      setPhase("finished");
-      // Let the last sweeps fade, then drop the covering CSS entirely.
-      window.setTimeout(() => html().classList.remove("build-armed", "build-live"), 700);
-      window.setTimeout(() => setHideDock(true), t0.current ? 3500 : 0);
-    },
-    [log],
-  );
-
-  const choose = useCallback(
-    (mode: Mode) => {
-      try {
-        sessionStorage.setItem(SEEN_KEY, "1");
-      } catch {
-        /* storage blocked: fine */
-      }
-      if (mode === "done") {
-        finish(true);
+  const launch = useCallback(
+    (mode: Mode, l: Lang) => {
+      store.set(ss(), SEEN, "1");
+      if (l !== lang) {
+        if (mode !== "done") store.set(ss(), AUTO, mode);
+        window.location.href = `/${l}`;
         return;
       }
-      t0.current = performance.now();
-      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-      setPhase("running");
-      log(build.boot[langRef.current]);
-      if (mode === "show") runShow();
-      else runScroll();
+      if (mode === "done") {
+        delete document.documentElement.dataset["build"];
+        setStage("off");
+        return;
+      }
+      pendingMode.current = mode;
+      setStage("build");
     },
-    // runShow/runScroll only touch refs and stable setters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [finish, log],
+    [lang],
   );
 
-  function runShow() {
-    follow.current = true;
-    const stopFollow = () => {
-      follow.current = false;
-    };
-    window.addEventListener("wheel", stopFollow, { once: true, passive: true });
-    window.addEventListener("touchstart", stopFollow, { once: true, passive: true });
-    for (const a of PLAN) later(() => startAgent(a, a.dur), a.start * 1000);
-    later(() => finish(false), TOTAL * 1000);
-    // Camera: keep the sweep edge of the newest running agent in view.
-    const tick = () => {
-      if (follow.current) {
-        const newest = [...running.current.entries()]
-          .map(([n, at]) => ({ a: PLAN[n - 1]!, at }))
-          .filter((x) => x.a.zone && x.a.zone !== "nav")
-          .sort((x, y) => y.at - x.at)[0];
-        const el = newest && zoneEl(newest.a.zone);
-        if (el) {
-          const p = Math.min(1, (performance.now() - newest.at) / (newest.a.dur * 1000));
-          const r = el.getBoundingClientRect();
-          const target = Math.max(
-            0,
-            window.scrollY + r.top + r.height * p - window.innerHeight * 0.55,
-          );
-          const y = window.scrollY + (target - window.scrollY) * 0.06;
-          if (Math.abs(target - window.scrollY) > 1)
-            window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior });
-        }
-      }
-      setElapsed((performance.now() - t0.current) / 1000);
-      raf.current = requestAnimationFrame(tick);
-    };
-    raf.current = requestAnimationFrame(tick);
-  }
+  const toggleSwarm = () => {
+    const on = !swarm;
+    setSwarm(on);
+    engine.current?.setSwarm(on);
+    store.set(ls(), SWARM, on ? "1" : "0");
+  };
 
-  function runScroll() {
-    let nextFree = 0; // stagger agents that enter view at the same time
-    const qa = PLAN[PLAN.length - 1]!;
-    const zoned = PLAN.filter((a) => a.zone);
-    io.current = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue;
-          const a = zoned.find((x) => x.zone === (e.target as HTMLElement).dataset["build"]);
-          if (!a) continue;
-          io.current?.unobserve(e.target);
-          const now = performance.now();
-          const wait = Math.max(0, nextFree - now);
-          nextFree = now + wait + 350;
-          later(() => startAgent(a, SCROLL_DUR), wait);
-        }
-      },
-      { rootMargin: "0px 0px -20% 0px", threshold: 0.05 },
-    );
-    zoned.forEach((a) => {
-      const el = zoneEl(a.zone);
-      if (el) io.current!.observe(el);
-    });
-    const tick = () => {
-      setElapsed((performance.now() - t0.current) / 1000);
-      if (
-        zoned.every((a) => doneSet.current.has(a.n)) &&
-        !running.current.has(qa.n) &&
-        !doneSet.current.has(qa.n)
-      ) {
-        startAgent(qa, 2.5);
-        later(() => finish(false), 3000);
-      }
-      raf.current = requestAnimationFrame(tick);
-    };
-    raf.current = requestAnimationFrame(tick);
-  }
-
-  // Keyboard: arrows / 1-3 / Enter in the prompt, Esc skips at any point.
+  // Esc skips the running build.
   useEffect(() => {
-    if (phase !== "intro" && phase !== "running") return;
+    if (stage !== "build") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") engine.current?.skip();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [stage]);
+
+  if (stage === "off") return null;
+  if (stage === "intro") return <Terminal lang={lang} onLaunch={launch} />;
+
+  return (
+    <>
+      <canvas
+        ref={canvas}
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-[70] h-full w-full"
+      />
+      {hud && (
+        <Hud
+          lang={lang}
+          s={hud}
+          swarm={swarm}
+          onSkip={() => engine.current?.skip()}
+          onPause={() => engine.current?.togglePause()}
+          onReplay={() => engine.current?.replay()}
+          onSwarm={toggleSwarm}
+        />
+      )}
+    </>
+  );
+}
+
+// ── HUD ─────────────────────────────────────────────────────────
+function Hud({
+  lang,
+  s,
+  swarm,
+  onSkip,
+  onPause,
+  onReplay,
+  onSwarm,
+}: {
+  lang: Lang;
+  s: BuildState;
+  swarm: boolean;
+  onSkip: () => void;
+  onPause: () => void;
+  onReplay: () => void;
+  onSwarm: () => void;
+}) {
+  const [flip, setFlip] = useState(false);
+  useEffect(() => {
+    const id = window.setInterval(() => setFlip((f) => !f), 1700);
+    return () => clearInterval(id);
+  }, []);
+  const text = s.done
+    ? `${build.builtBy[lang]} ${s.secs.toFixed(1)} s`
+    : s.mode === "scroll"
+      ? `${build.manual[lang]} · ${s.section + 1} ${build.of[lang]} ${s.total}`
+      : flip
+        ? `${s.section + 1} ${build.of[lang]} ${s.total} ${build.sections[lang]}`
+        : `14 ${build.agents[lang]}: ${build.phases[s.phase][lang]}`;
+  const btn =
+    "flex h-10 items-center justify-center rounded-full border border-border bg-card/90 px-4 font-sans text-xs text-foreground backdrop-blur transition-colors hover:bg-secondary";
+  return (
+    <>
+      <div
+        className="fixed inset-x-0 bottom-5 z-[80] flex justify-center gap-2 px-4"
+        role="status"
+        aria-live="polite"
+      >
+        <div className="flex h-10 items-center gap-3 rounded-full border border-border bg-card/90 px-4 font-mono text-[11px] text-foreground shadow-2xl backdrop-blur">
+          <span className="flex -space-x-0.5">
+            {DOTS.map((c) => (
+              <span key={c} className="size-1.5 rounded-full" style={{ background: c }} />
+            ))}
+          </span>
+          <span className="whitespace-nowrap">{text}</span>
+          {!s.done && (
+            <span className="hidden items-center gap-1 sm:flex" aria-hidden>
+              {Array.from({ length: s.total }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${i < s.section ? "w-1.5 bg-foreground" : i === s.section ? "w-5 bg-foreground/80" : "w-1.5 bg-foreground/20"}`}
+                />
+              ))}
+            </span>
+          )}
+        </div>
+        {!s.done && (
+          <>
+            <button
+              type="button"
+              onClick={onPause}
+              aria-label={s.paused ? build.resume[lang] : build.pause[lang]}
+              className={`${btn} w-10 px-0`}
+            >
+              {s.paused ? <Play size={14} /> : <Pause size={14} />}
+            </button>
+            <button type="button" onClick={onSkip} className={btn}>
+              {build.skip[lang]}
+            </button>
+          </>
+        )}
+      </div>
+      <div className="fixed bottom-5 right-5 z-[80] hidden gap-2 md:flex">
+        <button
+          type="button"
+          onClick={onSwarm}
+          aria-label={build.swarm[lang]}
+          title={build.swarm[lang]}
+          className={`${btn} w-10 px-0`}
+        >
+          {swarm ? <Eye size={14} /> : <EyeOff size={14} />}
+        </button>
+        {s.done && (
+          <button
+            type="button"
+            onClick={onReplay}
+            aria-label={build.replay[lang]}
+            title={build.replay[lang]}
+            className={`${btn} w-10 px-0`}
+          >
+            <RotateCcw size={14} />
+          </button>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ── Terminal ────────────────────────────────────────────────────
+type Line = { kind: "cmd" | "out" | "ask" | "reply"; text: string };
+
+function Terminal({ lang, onLaunch }: { lang: Lang; onLaunch: (m: Mode, l: Lang) => void }) {
+  const script: Line[] = [
+    ...build.cmds.flatMap((c) => [
+      { kind: "cmd" as const, text: c.cmd },
+      { kind: "out" as const, text: c.out[lang] },
+    ]),
+    { kind: "ask", text: build.ask[lang] },
+    { kind: "reply", text: build.reply[lang] },
+  ];
+  const [shown, setShown] = useState(0); // lines fully visible
+  const [chars, setChars] = useState(0); // chars typed of the current line
+  const [step, setStep] = useState<0 | 1>(0);
+  const [sel, setSel] = useState(0);
+  const mode = useRef<Mode>("show");
+  const typing = shown < script.length;
+  const langOpts = [...build.langs].sort((a) => (a.id === lang ? -1 : 1));
+
+  // Type user commands char by char; outputs appear at once.
+  useEffect(() => {
+    if (!typing) return;
+    const line = script[shown]!;
+    const typed = line.kind === "cmd" || line.kind === "ask";
+    if (typed && chars < line.text.length) {
+      const id = window.setTimeout(() => setChars((c) => c + 1), 28);
+      return () => clearTimeout(id);
+    }
+    const id = window.setTimeout(
+      () => {
+        setShown((s) => s + 1);
+        setChars(0);
+      },
+      typed ? 260 : 380,
+    );
+    return () => clearTimeout(id);
+  });
+
+  const choose = useCallback(
+    (i: number) => {
+      if (step === 0) {
+        const m = build.modes[i]!.id;
+        if (m === "done") {
+          onLaunch("done", lang);
+          return;
+        }
+        mode.current = m;
+        setStep(1);
+        setSel(0);
+      } else onLaunch(mode.current, langOpts[i]!.id);
+    },
+    [step, lang, onLaunch, langOpts],
+  );
+
+  useEffect(() => {
+    const prev = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = prev;
+    };
+  }, []);
+
+  useEffect(() => {
+    const n = step === 0 ? build.modes.length : langOpts.length;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        finish(true);
+        onLaunch("done", lang);
         return;
       }
-      if (phase === "running") {
-        if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", " "].includes(e.key))
-          follow.current = false;
+      if (typing) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          setShown(script.length);
+        }
         return;
       }
-      const n = build.options.length;
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSel((s) => (s + 1) % n);
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setSel((s) => (s - 1 + n) % n);
-      } else if (/^[1-3]$/.test(e.key)) choose(build.options[Number(e.key) - 1]!.id);
-      else if (e.key === "Enter") {
+      } else if (e.key === "Enter") {
         e.preventDefault();
-        choose(build.options[sel]!.id);
-      }
+        choose(sel);
+      } else if (/^[1-9]$/.test(e.key) && Number(e.key) <= n) choose(Number(e.key) - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, sel, choose, finish]);
+  });
 
-  if (phase === "idle") return null;
+  const opts =
+    step === 0
+      ? build.modes.map((m) => ({ label: m.label[lang], desc: m.desc[lang] }))
+      : langOpts.map((l) => ({ label: l.label, desc: l.desc[lang] }));
+  const [m1, ...mRest] =
+    build.model[lang].split(" with ").length > 1
+      ? build.model[lang].split(" with ")
+      : build.model[lang].split(" con ");
+  const joiner = lang === "en" ? " with " : " con ";
 
-  if (phase === "intro") {
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 px-4 backdrop-blur-sm">
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="build-prompt"
-          className="build-term w-full max-w-xl border border-border bg-card font-mono text-sm shadow-2xl"
-        >
-          <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
-            <span className="size-2.5 rounded-full bg-ash/60" />
-            <span className="size-2.5 rounded-full bg-ash/60" />
-            <span className="size-2.5 rounded-full bg-ember" />
-            <span className="ml-2 text-xs text-muted-foreground">{build.cwd}</span>
-          </div>
-          <div className="space-y-5 p-5 md:p-6">
-            <div className="border border-ember/50 px-4 py-3">
-              <p>
-                <span className="text-ember">✻</span> {build.welcome[lang]}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">{build.meta}</p>
-            </div>
-            <p id="build-prompt" className="leading-relaxed">
-              <span className="text-ember">&gt;</span> {build.prompt[lang]}
-            </p>
-            <ul className="space-y-1" role="listbox" aria-activedescendant={`build-opt-${sel}`}>
-              {build.options.map((o, i) => (
-                <li key={o.id} id={`build-opt-${i}`} role="option" aria-selected={sel === i}>
-                  <button
-                    type="button"
-                    onMouseEnter={() => setSel(i)}
-                    onClick={() => choose(o.id)}
-                    className={`flex w-full items-baseline gap-3 px-2 py-1.5 text-left transition-colors ${sel === i ? "bg-ember/10 text-foreground" : "text-muted-foreground"}`}
-                  >
-                    <span className={sel === i ? "text-ember" : "opacity-0"}>❯</span>
-                    <span>
-                      {i + 1}. {o.label[lang]}
-                    </span>
-                    <span className="ml-auto hidden text-xs text-muted-foreground sm:inline">
-                      {o.hint[lang]}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <p className="text-xs text-muted-foreground">{build.keys[lang]}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (hideDock) return null;
-
-  const total = phase === "finished" ? 14 : doneSet.current.size;
   return (
-    <aside
-      aria-live="polite"
-      className={`build-term fixed bottom-4 right-4 z-[60] w-[min(26rem,calc(100vw-2rem))] border border-border bg-card/95 font-mono text-xs shadow-2xl backdrop-blur transition-opacity duration-500 ${phase === "finished" ? "opacity-90" : ""}`}
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Claude Code"
+      className="fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-background px-5 py-6 font-mono text-[13px] leading-relaxed text-foreground md:px-8 md:py-8 md:text-[15px]"
     >
-      <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
-        <span>
-          <span className={phase === "running" ? "build-spin text-ember" : "text-ember"}>✻</span>{" "}
-          {phase === "running" ? build.building[lang] : build.done[lang]} · {total}/14{" "}
-          {build.agents[lang]}
-        </span>
-        <span className="flex items-center gap-3 text-muted-foreground">
-          <span>
-            {pad(Math.floor(elapsed / 60))}:{pad(Math.floor(elapsed % 60))}
-          </span>
-          {phase === "running" && (
-            <button
-              type="button"
-              onClick={() => finish(true)}
-              className="border border-border px-2 py-0.5 hover:text-foreground"
-            >
-              {build.skip[lang]} ⎋
-            </button>
-          )}
-        </span>
+      <header className="flex items-start gap-4">
+        <PixelLogo />
+        <div>
+          <p className="font-medium">{build.app}</p>
+          <p className="text-muted-foreground">
+            <span className="text-ember">{m1}</span>
+            {mRest.length ? joiner + mRest.join(joiner) : ""}
+          </p>
+          <p className="text-muted-foreground">{build.cwd}</p>
+        </div>
+      </header>
+
+      <div className="mt-8 space-y-3">
+        {script.slice(0, shown + (typing ? 1 : 0)).map((l, i) => {
+          const live = i === shown && typing && (l.kind === "cmd" || l.kind === "ask");
+          const text = live ? l.text.slice(0, chars) : l.text;
+          if (l.kind === "cmd" || l.kind === "ask")
+            return (
+              <p key={i} className="bg-secondary px-2 py-0.5">
+                <span className="text-muted-foreground">&gt;</span> {text}
+                {live && <span className="build-caret">▌</span>}
+              </p>
+            );
+          if (l.kind === "out") {
+            const [a, b] = l.text.split("Opus 5.5");
+            return (
+              <p key={i} className="-mt-2 pl-3 text-muted-foreground">
+                ↳ {a}
+                {b !== undefined && (
+                  <>
+                    <span className="text-ember">Opus 5.5</span>
+                    {b}
+                  </>
+                )}
+              </p>
+            );
+          }
+          return (
+            <p key={i} className="build-line">
+              <span className="text-ember">●</span> {text}
+            </p>
+          );
+        })}
       </div>
-      <div className="h-px bg-border">
-        <div
-          className="h-px bg-ember transition-[width] duration-300"
-          style={{ width: `${(total / 14) * 100}%` }}
-        />
-      </div>
-      <ol className="space-y-1 px-3 py-2.5">
-        {lines.map((l) => (
-          <li
-            key={l.id}
-            className={`build-line truncate ${l.kind === "done" ? "text-foreground" : l.kind === "start" ? "text-muted-foreground" : "text-ash"}`}
-          >
-            {l.kind === "start" ? <span className="text-ember">● </span> : null}
-            {l.text}
-          </li>
-        ))}
-      </ol>
-      {active.length > 0 && (
-        <p className="border-t border-border px-3 py-2 text-muted-foreground">
-          {active.map(tag).join(" · ")}
-        </p>
+
+      {!typing && (
+        <div className="build-line mt-5 border-t border-border pt-5">
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-muted-foreground">
+            {build.tabs.map((t, i) => (
+              <span
+                key={i}
+                className={
+                  i === step ? "font-medium text-foreground" : i < step ? "text-ember" : ""
+                }
+              >
+                {i < step || i === 2 ? "✓" : "☐"} {t[lang]}
+              </span>
+            ))}
+          </div>
+          <p className="mt-5 font-medium">{step === 0 ? build.q1[lang] : build.q2[lang]}</p>
+          <ul className="mt-4 space-y-1" role="listbox">
+            {opts.map((o, i) => (
+              <li key={i} role="option" aria-selected={sel === i}>
+                <button
+                  type="button"
+                  onMouseEnter={() => setSel(i)}
+                  onClick={() => choose(i)}
+                  className={`grid w-full grid-cols-[1.5rem_1fr] px-2 py-2 text-left transition-colors ${sel === i ? "bg-ember/10" : ""}`}
+                >
+                  <span className={sel === i ? "text-ember" : "text-transparent"}>&gt;</span>
+                  <span>
+                    <span className={sel === i ? "text-ember" : ""}>
+                      {i + 1}. {o.label}
+                    </span>
+                    <span className="block max-w-3xl text-muted-foreground">{o.desc}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-5 text-muted-foreground">{build.keys[lang]}</p>
+        </div>
       )}
-    </aside>
+
+      <footer className="mt-auto pt-10 text-xs text-muted-foreground md:text-[13px]">
+        <p className="text-right">◇ max · ultracode · /effort</p>
+        <div className="my-2 flex items-center gap-3">
+          <span className="h-px flex-1 bg-border" />
+          <span className="text-ember">ultracode</span>
+          <span className="h-px w-4 bg-border" />
+        </div>
+        <p>
+          <span className="text-[#d4553a]">⏵⏵ {build.status[lang]}</span> · 14 {build.agents[lang]}
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+/** Pixel "S" mark in the site's palette. */
+function PixelLogo() {
+  const rows = ["01110", "10000", "01110", "00001", "11110"];
+  return (
+    <svg width="52" height="52" viewBox="0 0 7 6" aria-hidden className="shrink-0">
+      {rows.flatMap((r, y) =>
+        [...r].map((c, x) =>
+          c === "1" ? (
+            <rect key={`${x}-${y}`} x={x} y={y + 0.5} width="1" height="1" fill="#e8894a" />
+          ) : null,
+        ),
+      )}
+      <rect x="6" y="0" width="0.7" height="0.7" fill="#f0b45a" />
+      <rect x="6" y="2.2" width="0.7" height="0.7" fill="#f1e7d0" />
+    </svg>
   );
 }
