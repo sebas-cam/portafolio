@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Eye, EyeOff, Pause, Play, RotateCcw } from "lucide-react";
 import { build, type Lang } from "@/content/site";
-import { BuildEngine, type BuildState } from "./build-engine";
+import { BuildEngine, markWireframe, type BuildState } from "./build-engine";
 
 /**
  * Full-screen Claude Code-style prompt, then a HUD over the live build.
@@ -42,9 +42,12 @@ export function BuildShow({ lang }: { lang: Lang }) {
   const engine = useRef<BuildEngine | null>(null);
   const pendingMode = useRef<Exclude<Mode, "done"> | null>(null);
 
-  useEffect(() => {
+  // Layout effects run before the browser paints, so the curtain → terminal → build
+  // hand-offs never expose a frame of the finished page.
+  useLayoutEffect(() => {
     const html = document.documentElement;
     if (!html.dataset["build"]) return;
+    markWireframe(); // the page under the terminal is already a wireframe
     html.dataset["buildLive"] = "";
     const auto = store.get(ss(), AUTO) as Mode | null;
     store.set(ss(), AUTO, null);
@@ -61,8 +64,8 @@ export function BuildShow({ lang }: { lang: Lang }) {
     };
   }, []);
 
-  // Start the engine once its canvas is mounted.
-  useEffect(() => {
+  // Start the engine once its canvas is mounted (before paint).
+  useLayoutEffect(() => {
     if (stage !== "build" || engine.current || !canvas.current) return;
     const e = new BuildEngine(canvas.current, lang, build.vectors[lang], setHud);
     e.setSwarm(store.get(ls(), SWARM) !== "0");

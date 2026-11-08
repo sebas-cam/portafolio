@@ -116,6 +116,7 @@ html[data-build] [data-bel] {
   transition: opacity 0.45s ease, color 0.6s ease, background-color 0.5s ease, border-color 0.5s ease, -webkit-text-stroke-color 0.6s ease, text-shadow 0.9s ease, filter 0.5s ease;
 }
 html[data-build] [data-bel]:not([data-on]) { opacity: 0.1; filter: blur(0.4px); }
+html[data-build-instant] :is([data-bel], [data-bel] *, .bg-card, [aria-hidden].pointer-events-none) { transition: none !important; }
 /* Headings: faint ghost outline; the canvas draws vectors/trace on top. */
 html[data-build] :is(h1, h2, h3, .display)[data-bel] { -webkit-text-stroke: 1px transparent; }
 html[data-build] :is(h1, h2, h3, .display)[data-bel]:not([data-on]) {

@@ -193,6 +193,21 @@ function contrast(el: HTMLElement) {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
 
+/** Put every [data-sec] zone into its wireframe state (marks build targets with data-bel). */
+export function markWireframe() {
+  // Snap into the wireframe without transitions, or the finished page visibly fades out.
+  const html = document.documentElement;
+  html.setAttribute("data-build-instant", "");
+  for (const el of document.querySelectorAll<HTMLElement>("[data-sec]")) {
+    const key = el.dataset["sec"]!;
+    const roots = [el, ...document.querySelectorAll<HTMLElement>(`[data-sec-with="${key}"]`)];
+    collect(roots).forEach((e) => e.setAttribute("data-bel", ""));
+  }
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => html.removeAttribute("data-build-instant")),
+  );
+}
+
 export class BuildEngine {
   private ctx: CanvasRenderingContext2D;
   private w = 0;
