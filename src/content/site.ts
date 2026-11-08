@@ -115,3 +115,42 @@ export const ui = {
   metaDescription: t("Full stack engineer in Lima building SaaS with AI. Next.js, Node.js, AWS.", "Ingeniero full stack en Lima creando SaaS. Next.js, Node.js, AWS."),
   form: { name: t("Name", "Nombre"), email: t("Email", "Correo"), message: t("Message", "Mensaje"), send: t("Send message", "Enviar mensaje"), sent: t("Thanks — I'll reply within 48h.", "Gracias — respondo en menos de 48h."), error: t("Something failed. Email me directly.", "Algo falló. Escríbeme directamente."), invalid: t("Please check the highlighted fields.", "Revisa los campos marcados.") },
 };
+
+// "Building live" intro: the page is fully rendered and covered; scripted agents uncover each zone.
+export type BuildZone = "nav" | "hero-title" | "hero-copy" | "metrics" | "projects" | "how" | "experience" | "clients" | "stack" | "services" | "education" | "contact" | "footer";
+export const build = {
+  welcome: t("Welcome to Sebas/codes", "Bienvenido a Sebas/codes"),
+  meta: "opus · effort: max · ultracode",
+  cwd: "~/portfolio",
+  prompt: t("This portfolio isn't built yet. 14 agents will build it in front of you. How do you want to see it?", "Este portafolio todavía no está hecho. Lo arman 14 agentes delante tuyo. ¿Cómo lo querés ver?"),
+  options: [
+    { id: "show", label: t("Presentation mode", "Modo presentación"), hint: t("watch the agents build it · ~55s", "mirá cómo lo arman · ~55s") },
+    { id: "scroll", label: t("Manual scroll", "Scroll manual"), hint: t("each section is built as you reach it", "cada sección se arma cuando llegás") },
+    { id: "done", label: t("Finished page", "Página terminada"), hint: t("short on time? skip straight to it", "¿poco tiempo? andá directo") },
+  ] as const,
+  keys: t("↑↓ to move · Enter to choose · Esc to skip", "↑↓ para moverte · Enter para elegir · Esc para saltar"),
+  building: t("building", "construyendo"),
+  agents: t("agents", "agentes"),
+  queued: t("queued", "en cola"),
+  painting: t("painting", "pintando"),
+  skip: t("Skip", "Saltar"),
+  replay: t("Replay build", "Repetir build"),
+  boot: t("spawning 14 agents…", "lanzando 14 agentes…"),
+  done: t("Portfolio built", "Portafolio listo"),
+  qa: t("reviewing links, contrast and mobile layout", "revisando links, contraste y layout mobile"),
+  zones: {
+    nav: t("navbar", "navbar"),
+    "hero-title": t("hero headline", "titular del hero"),
+    "hero-copy": t("hero copy + CTAs", "texto del hero + CTAs"),
+    metrics: t("key numbers", "números clave"),
+    projects: t("selected work · 4 products", "trabajos · 4 productos"),
+    how: t("how I build", "cómo construyo"),
+    experience: t("experience timeline", "timeline de experiencia"),
+    clients: t("client work", "trabajo con clientes"),
+    stack: t("stack", "stack"),
+    services: t("services", "servicios"),
+    education: t("education", "formación"),
+    contact: t("contact", "contacto"),
+    footer: t("footer", "footer"),
+  } satisfies Record<BuildZone, L>,
+};

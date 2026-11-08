@@ -97,10 +97,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
+// Runs before first paint: arm the "building live" intro on the home page, once per session.
+// `?build` forces a replay. Reduced-motion visitors always get the finished page.
+const BUILD_ARM_SCRIPT = `try{var q=new URLSearchParams(location.search).has("build");if(/^\\/(en|es)?\\/?$/.test(location.pathname)&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&(q||!sessionStorage.getItem("build-seen")))document.documentElement.classList.add("build-armed")}catch(e){}`;
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: BUILD_ARM_SCRIPT }} />
         <HeadContent />
       </head>
       <body>

@@ -107,3 +107,80 @@
   .slat { animation: none; transform: scaleY(0.6); }
   html { scroll-behavior: auto; }
 }
+
+/* ── Building live ──────────────────────────────────────────────
+   The page is fully rendered. While html.build-armed is set, each
+   [data-build] zone is covered by a skeleton layer (::after) whose
+   top edge sweeps down to 100%, "painting" the real content in.
+   The label (::before) rides on the sweep edge. */
+html.build-armed [data-build] { isolation: isolate; }
+html.build-armed [data-build]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: auto;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 22px, oklch(0.93 0.025 85 / 4%) 22px 30px, transparent 30px 46px) left bottom / 62% 100% no-repeat,
+    linear-gradient(var(--background), var(--background));
+  border-top: 1px solid transparent;
+  transition: top var(--build-dur, 2s) linear, opacity 0.5s ease;
+}
+html.build-armed [data-build]::before {
+  content: attr(data-build-label);
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 31;
+  max-width: calc(100% - 1rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0.6rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  transition: top var(--build-dur, 2s) linear, opacity 0.4s ease, color 0.3s;
+}
+html.build-armed [data-build]:not([data-build-label])::before { content: none; }
+html.build-armed [data-build][data-build-state="building"]::after {
+  top: 100%;
+  border-top-color: var(--ember);
+  box-shadow: 0 -10px 28px -6px oklch(0.72 0.15 50 / 55%);
+}
+html.build-armed [data-build][data-build-state="building"]::before {
+  top: 100%;
+  margin-top: 0.4rem;
+  color: var(--ember);
+}
+html.build-armed [data-build][data-build-state="done"]::after,
+html.build-armed [data-build][data-build-state="done"]::before {
+  top: 100%;
+  opacity: 0;
+  transition-duration: 0.35s;
+  pointer-events: none;
+}
+/* Hold a solid curtain until React mounts the terminal. */
+html.build-armed:not(.build-live) body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: var(--background);
+}
+/* Failsafe: if JS never boots, uncover the page after a few seconds. */
+@keyframes build-failsafe { to { opacity: 0; visibility: hidden; pointer-events: none; } }
+html.build-armed:not(.build-live) [data-build]::after,
+html.build-armed:not(.build-live) [data-build]::before,
+html.build-armed:not(.build-live) body::after { animation: build-failsafe 0.4s 4s forwards; }
+
+@keyframes build-spin { to { transform: rotate(360deg); } }
+.build-spin { display: inline-block; animation: build-spin 1.6s linear infinite; }
+@keyframes build-line-in { from { opacity: 0; transform: translateY(4px); } }
+.build-line { animation: build-line-in 0.25s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  html.build-armed [data-build]::after, html.build-armed [data-build]::before { display: none; }
+}

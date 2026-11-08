@@ -1,7 +1,7 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { Menu, X } from "lucide-react";
-import { CONTACT_EMAIL, SOCIAL, ui, type Lang } from "@/content/site";
+import { CONTACT_EMAIL, SOCIAL, ui, type BuildZone, type Lang } from "@/content/site";
 import { Button } from "@/components/ui/button";
 
 const links = ["projects", "about", "services", "contact"] as const;
@@ -12,7 +12,7 @@ export function Navbar({ lang }: { lang: Lang }) {
   const other: Lang = lang === "en" ? "es" : "en";
   const swapped = pathname.replace(/^\/(en|es)/, `/${other}`);
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
+    <header data-build="nav" className="fixed inset-x-0 top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
       <nav className="mx-auto flex h-14 max-w-7xl items-center justify-between px-5 md:px-10">
         <Link to="/$lang" params={{ lang }} className="font-mono text-xs uppercase tracking-[0.2em]">
           Sebas<span className="text-ember">/</span>codes
@@ -53,7 +53,7 @@ export function SideLabel({ lang }: { lang: Lang }) {
 
 export function Footer({ lang }: { lang: Lang }) {
   return (
-    <footer className="border-t border-border">
+    <footer data-build="footer" className="relative border-t border-border">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-10 md:flex-row md:items-center md:justify-between md:px-10">
         <span className="eyebrow">© {new Date().getFullYear()} Sebastian Campos Marcenal</span>
         <div className="flex flex-wrap gap-x-6 gap-y-3">
@@ -68,9 +68,9 @@ export function Footer({ lang }: { lang: Lang }) {
   );
 }
 
-export function Section({ label, children, className = "", id }: { label?: string; children: ReactNode; className?: string; id?: string }) {
+export function Section({ label, children, className = "", id, build }: { label?: string; children: ReactNode; className?: string; id?: string; build?: BuildZone }) {
   return (
-    <section id={id} className={`mx-auto max-w-7xl scroll-mt-14 border-t border-border px-5 py-16 md:px-10 md:py-20 ${className}`}>
+    <section id={id} data-build={build} className={`relative mx-auto max-w-7xl scroll-mt-14 border-t border-border px-5 py-16 md:px-10 md:py-20 ${className}`}>
       {label && <p className="eyebrow mb-10">{label}</p>}
       {children}
     </section>
