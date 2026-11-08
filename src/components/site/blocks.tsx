@@ -38,5 +38,5 @@ export function EducationList({ lang }: { lang: Lang }) {
   return <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">{education.map((e, i) => <div key={i} className="border-t border-border pt-5"><h3 className="text-lg font-medium">{e.title[lang]}</h3><p className="mt-3 text-sm text-muted-foreground">{e.detail[lang]}</p></div>)}</div>;
 }
 export function ContactCta({ lang }: { lang: Lang }) {
-  return <div><h2 className="display break-words text-4xl leading-tight sm:text-5xl md:text-7xl">{ui.contactTitle[lang]}</h2><p className="mt-6 text-muted-foreground">{ui.contactSub[lang]}</p><Button asChild variant="outline" className="mt-10 h-auto border-foreground bg-transparent px-6 py-4 font-mono text-xs uppercase hover:bg-foreground hover:text-background"><Link to="/$lang/contact" params={{ lang }}>{ui.ctaContact[lang]}<ArrowUpRight /></Link></Button></div>;
+  return <div><h2 data-neon className="display break-words text-4xl leading-tight sm:text-5xl md:text-7xl">{ui.contactTitle[lang]}</h2><p className="mt-6 text-muted-foreground">{ui.contactSub[lang]}</p><Button asChild variant="outline" className="mt-10 h-auto border-foreground bg-transparent px-6 py-4 font-mono text-xs uppercase hover:bg-foreground hover:text-background"><Link to="/$lang/contact" params={{ lang }}>{ui.ctaContact[lang]}<ArrowUpRight /></Link></Button></div>;
 }

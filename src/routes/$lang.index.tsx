@@ -19,7 +19,7 @@ function Home() {
       <AsciiBackdrop />
       <div className="relative mx-auto max-w-7xl">
         <div><p className="eyebrow mb-6">{ui.name[lang]} — Lima, PE</p>
-        <h1 className="display max-w-5xl text-4xl leading-[1.06] sm:text-5xl lg:text-7xl">{ui.heroLine[lang]}</h1></div>
+        <h1 data-neon className="display max-w-5xl text-4xl leading-[1.06] sm:text-5xl lg:text-7xl">{ui.heroLine[lang]}</h1></div>
         <div className="mt-8 grid gap-8 md:grid-cols-12"><div className="md:col-span-7"><p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">{ui.heroSub[lang]}</p><p className="mt-4 max-w-xl font-mono text-xs leading-relaxed text-muted-foreground">{ui.markets[lang]}</p></div>
           <div className="flex flex-wrap items-end gap-3 md:col-span-5 md:justify-end">
             <Button asChild className="h-auto px-5 py-4 font-mono text-xs uppercase"><a href="#selected-work">{ui.ctaWork[lang]}<ArrowDown /></a></Button>

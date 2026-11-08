@@ -64,7 +64,7 @@ export function BuildShow({ lang }: { lang: Lang }) {
   // Start the engine once its canvas is mounted.
   useEffect(() => {
     if (stage !== "build" || engine.current || !canvas.current) return;
-    const e = new BuildEngine(canvas.current, lang, setHud);
+    const e = new BuildEngine(canvas.current, lang, build.vectors[lang], setHud);
     e.setSwarm(store.get(ls(), SWARM) !== "0");
     engine.current = e;
     if (pendingMode.current) void e.start(pendingMode.current);
@@ -72,7 +72,7 @@ export function BuildShow({ lang }: { lang: Lang }) {
 
   const launch = useCallback(
     (mode: Mode, l: Lang) => {
-      store.set(ss(), SEEN, "1");
+      store.set(ls(), SEEN, "1");
       if (l !== lang) {
         if (mode !== "done") store.set(ss(), AUTO, mode);
         window.location.href = `/${l}`;
@@ -150,6 +150,15 @@ function Hud({
   onSwarm: () => void;
 }) {
   const [flip, setFlip] = useState(false);
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    if (!s.done) {
+      setGone(false);
+      return;
+    }
+    const id = window.setTimeout(() => setGone(true), 4000);
+    return () => clearTimeout(id);
+  }, [s.done]);
   useEffect(() => {
     const id = window.setInterval(() => setFlip((f) => !f), 1700);
     return () => clearInterval(id);
@@ -166,7 +175,7 @@ function Hud({
   return (
     <>
       <div
-        className="fixed inset-x-0 bottom-5 z-[80] flex justify-center gap-2 px-4"
+        className={`fixed inset-x-0 bottom-5 z-[80] flex justify-center gap-2 px-4 transition-all duration-500 ${gone ? "pointer-events-none translate-y-4 opacity-0" : ""}`}
         role="status"
         aria-live="polite"
       >
