@@ -16,7 +16,7 @@ function Home() {
     <section className="relative overflow-hidden px-5 pb-14 pt-28 md:px-10 md:pt-36">
       <AsciiBackdrop />
       <div className="relative mx-auto max-w-7xl">
-        <p className="eyebrow mb-6">{ui.name[lang]} — Lima, PE</p>
+        <p className="eyebrow mb-6">{ui.name[lang]}</p>
         <h1 className="display max-w-5xl text-4xl leading-[1.06] sm:text-5xl lg:text-7xl">{ui.heroLine[lang]}</h1>
         <div className="mt-8 grid gap-8 md:grid-cols-12"><div className="md:col-span-7"><p className="max-w-2xl text-lg leading-relaxed text-muted-foreground">{ui.heroSub[lang]}</p><p className="mt-4 max-w-xl font-mono text-xs leading-relaxed text-muted-foreground">{ui.markets[lang]}</p></div>
           <div className="flex flex-wrap items-end gap-3 md:col-span-5 md:justify-end">
