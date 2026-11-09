@@ -9,7 +9,6 @@ import { BuildEngine, markWireframe, type BuildState } from "./build-engine";
  */
 
 type Mode = (typeof build.modes)[number]["id"];
-const SEEN = "build-seen";
 const AUTO = "build-auto";
 const SWARM = "build-swarm";
 const DOTS = ["#e8894a", "#f0b45a", "#d4553a", "#f1e7d0", "#8f8476"];
@@ -75,7 +74,6 @@ export function BuildShow({ lang }: { lang: Lang }) {
 
   const launch = useCallback(
     (mode: Mode, l: Lang) => {
-      store.set(ls(), SEEN, "1");
       if (l !== lang) {
         if (mode !== "done") store.set(ss(), AUTO, mode);
         window.location.href = `/${l}`;

@@ -97,9 +97,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-// Runs before first paint: arm the "building live" intro on the home page, once per session.
-// `?build` forces a replay. Reduced-motion visitors always get the finished page.
-const BUILD_ARM_SCRIPT = `try{var d=document.documentElement,s=sessionStorage,q=new URLSearchParams(location.search).has("build");if(/^\\/(en|es)\\/?$/.test(location.pathname)&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&(q||s.getItem("build-auto")||!localStorage.getItem("build-seen")))d.setAttribute("data-build","pending")}catch(e){}`;
+// Runs before first paint: arm the "building live" intro on every full load of the home page.
+// Client-side navigation back home skips it. Reduced-motion visitors always get the finished page.
+const BUILD_ARM_SCRIPT = `try{if(/^\\/(en|es)\\/?$/.test(location.pathname)&&!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.setAttribute("data-build","pending")}catch(e){}`;
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
